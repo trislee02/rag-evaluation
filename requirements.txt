@@ -1,0 +1,10 @@
+datasets==2.14.6
+langchain==0.0.350
+matplotlib==3.8.1
+openai==0.28.1
+pandas==2.1.4
+python-dotenv==1.0.0
+ragas @ git+https://github.com/trislee02/ragas.git
+Requests==2.31.0
+scipy==1.11.4
+tenacity==8.2.3

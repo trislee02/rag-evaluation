@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 
-EVALUATION_RESULT_FILE = "result/evalset30-history-ragas.csv"
+EVALUATION_RESULT_FILE = "result/evalset40-history-ragas.csv"
 OUTPUT_DIR = "figure/"
 
 PAIRS = [["faithfulness", "context_recall"],
          ["faithfulness", "answer_similarity"],
+         ["faithfulness", "request_recall"],
          ["context_recall", "request_recall"],
          ["answer_relevancy", "request_recall"],
         ]

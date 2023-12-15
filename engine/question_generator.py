@@ -13,11 +13,13 @@ class QuestionGenerator:
 #     system_message = """Rephrase the request by modifying the order of questions, commands, or by altering or omitting small details, or by using a different example.
 # Only return the rephrased request. Do not return any further title, heading, or instruction."""
 
-    system_message = """Generate a request in the same direction and style as the sample. The generated request can be a bit different from the example.
+    system_message = """Generate a message in the same direction and style as the same direction. The generated request can be a bit different from the example.
 Only return the rephrased request. Do not return any further title, heading, or instruction."""
 
     user_content_template = """Request: 
 {sample_request}
+
+Generated request:
 """
 
     regen_system_message = """Your previous rephrased request is to semantically different from the original request. 

@@ -7,12 +7,12 @@ from utils.embedding import Embedding
 
 MAX_TRY = 3
 DISTANCE_THRESHOLD = None 
-NUMBER_GENERATIONS = 3
+NUMBER_GENERATIONS = 1
 
 question_gen = QuestionGenerator()
 embed = Embedding()
 
-OUTPUT_SYNTHETIC_DATA = 'synthetic_data/data30-history.csv'
+OUTPUT_SYNTHETIC_DATA = 'synthetic_data/data40-unseen.csv'
 SOURCE_DIR = "./luxai-support-data-csv/*.csv"
 
 with open(OUTPUT_SYNTHETIC_DATA, mode="w", newline='') as gen_dataset: 
