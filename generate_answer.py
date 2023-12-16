@@ -3,48 +3,44 @@ import csv
 import glob
 import json
 import ast
-
+import pandas as pd
+import argparse
+from tqdm import tqdm
 from dotenv import load_dotenv
 from engine.chatbot import Chatbot
 
+"""
+This script is used to send POST request to chatbot server to get answer. The input source is the output of running `generate_dataset.py`
+
+Usage:
+    python generate_answer.py -s synthesis_data.csv -o answers.csv     
+"""
+
 load_dotenv()
-
 CHAT_ENDPOINT = os.environ.get("CHAT_ENDPOINT")
-
 mybot = Chatbot(CHAT_ENDPOINT)
 
-OUTPUT_FILE = 'eval_dataset/answer_humangen_dataset_reranker.csv'
-# DATASET_FILE = 'synthetic_data/data30-history.csv'
-DATASET_FILE = 'synthetic_data/humangen_dataset.csv'
+COLUMN_NAMES = ['question','answer','ground_truths','contexts','request','supporting_content','tokens_usage','conversation_history']
 
-with open(OUTPUT_FILE, mode="w", newline='', encoding="utf-8") as gen_dataset: 
-    csv_writer = csv.writer(gen_dataset, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    columns = ['question','answer','ground_truths','contexts','request','supporting_content','tokens_usage','conversation_history']
-    csv_writer.writerow(columns)
-    count = -1
-    with open(DATASET_FILE) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--source', required=True, help="Path to message file")
+    parser.add_argument('-o', '--output', required=True, help="Output answer file")
+    args = parser.parse_args()
 
-        line_count = 0
-        for row in csv_reader:
-            count += 1
-            if count < 1:
-                continue
-            print(f"Row #{count}")
-            if len(row) <= 0 or row[0].strip() == "":
-                continue
-            question_id = row[0]
-            question = row[1]
-            ground_request = row[2]
-            ground_response = row[3]
-            history = row[5]
+    df_out = pd.DataFrame([], columns=COLUMN_NAMES)
+    df_in = pd.read_csv(args.source)
+    df_in.fillna('', inplace=True)
 
-            # history = history.replace("\\r\\n", "\n").replace("\\n", '\n').replace("\\'", '\\"')
+    try:
+        for index, row in tqdm(df_in.iterrows(), total=df_in.shape[0]):
+            message = row["message"]
+            ground_response = row["ground_answer"]
+            history = row["conversation_history"]
+            
             parsed_history = ast.literal_eval(history)
             parsed_history = [json.loads(element) for element in parsed_history]
-            # print(history)
-            # input()
-            response = mybot.run(question, history=parsed_history)
+            response = mybot.run(message, history=parsed_history)
             
             answer = response["answer"]
             contexts = []
@@ -53,15 +49,23 @@ with open(OUTPUT_FILE, mode="w", newline='', encoding="utf-8") as gen_dataset:
             supporting_contents = response["supporting_contents"]
             token_usage = response["token_usage"]
             extracted_requests = response["extracted_requests"]
-
-
             ground_truths = [ground_response]
 
-            # supporting_contents = supporting_contents.replace("\\r\\n", "\n").replace("\\r", '')
-            extracted_requests = "\n".join(extracted_requests)
-            
+            extracted_requests = "\n".join(extracted_requests)        
             contexts.append(supporting_contents)
+        
+            new_answer = {
+                "question": [message],
+                "answer": [answer],
+                "ground_truths": [ground_truths],
+                "contexts": [contexts],
+                "request": [extracted_requests],
+                "supporting_content": [supporting_contents],
+                "tokens_usage": [token_usage],
+                "conversation_history": [history]
+            }
+            df_out = pd.concat([df_out, pd.DataFrame(new_answer)], ignore_index=True)
+    except Exception as error:
+        print(error)
 
-            # Only record answers generated from specific contexts, i.e. the LLM knows the answer based on given context
-            if len(contexts) > 0:
-                csv_writer.writerow([question, answer, ground_truths, contexts, extracted_requests, supporting_contents, token_usage, history])
+    df_out.to_csv(args.output, index=False)    

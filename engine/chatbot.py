@@ -8,10 +8,6 @@ class Chatbot:
     def run(self, query, history: list[dict] = []):
         new_message = {"user": query}
         history.append(new_message)
-
-        for h in history:
-            for key, value in h.items():
-                print(key, ':', type(value))
         
         data = {
             "approach": "ms",

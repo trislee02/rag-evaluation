@@ -1,15 +1,20 @@
 import openai
+import os
 from scipy.spatial.distance import cosine
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Embedding:
     def __init__(self):
         openai.api_type = "azure"
-        openai.api_base = "https://tri-testing.openai.azure.com/"
-        openai.api_version = "2023-05-15"
-        openai.api_key = "302e2d25248b442faa27c9b213f3fb2d"
+        openai.api_base = os.getenv("AZURE_OPENAI_API_BASE")
+        openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+        openai.api_key = os.getenv("AZURE_OPENAI_API_KEY")
+        self.embedding_engine = os.getenv("AZURE_EMBEDDING_ENGINE")
 
-    def get_embedding(self, text, model="text-embedding-ada-002"):
-        return openai.Embedding.create(input=text, engine="tri-ada")['data'][0]['embedding']
+    def get_embedding(self, text):
+        return openai.Embedding.create(input=text, engine=self.embedding_engine)['data'][0]['embedding']
 
     def embedding_distance(self, embedding_1, embedding_2):
         return cosine(embedding_1, embedding_2) # cosine_distance
